@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html><html lang="pt-BR"><head>
+<!DOCTYPE html><html lang="pt-BR"><head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Convite Real de 15 Anos | Uma Tarde em Pemberley</title>
@@ -346,9 +346,9 @@
 <span class="hidden sm:inline text-amber-200/50 text-xs">✦</span>
 <span class="hidden sm:inline font-serif italic text-amber-100/80 text-sm">Derbyshire, Inglaterra</span>
 </div>
-<!-- Controle de Trilha Sonora Real Clássica: Mrs. Darcy / Orgulho & Preconceito -->
+<!-- Controle de Trilha Sonora Real Clássica: Dawn & Mrs. Darcy / Orgulho & Preconceito -->
 <div class="flex items-center gap-3">
-<button class="flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-amber-300/50 bg-[#17281D]/80 hover:bg-[#143529] text-amber-100 text-xs font-serif tracking-wider transition-all duration-300 backdrop-blur-md shadow-lg hover:border-amber-200 group" id="musicToggleBtn" title="Tocar / Pausar trilha de piano acústico 'Mrs. Darcy'">
+<button class="flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-amber-300/50 bg-[#17281D]/80 hover:bg-[#143529] text-amber-100 text-xs font-serif tracking-wider transition-all duration-300 backdrop-blur-md shadow-lg hover:border-amber-200 group" id="musicToggleBtn" title="Tocar / Pausar trilha sonora (Dawn & Mrs. Darcy)">
 <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400/20 text-amber-300 group-hover:scale-110 transition-transform">
 <svg class="w-3.5 h-3.5 fill-current text-amber-300 hidden" id="musicIconPlaying" viewBox="0 0 24 24">
 <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"></path>
@@ -364,7 +364,7 @@
 <span class="eq-bar"></span>
 <span class="eq-bar"></span>
 </span>
-<span class="font-serif tracking-wide text-amber-100 font-medium text-xs" id="musicBtnLabel">🎵 Mrs. Darcy (Piano Solo)</span>
+<span class="font-serif tracking-wide text-amber-100 font-medium text-xs" id="musicBtnLabel">🎵 Dawn (Trilha Sonora)</span>
 </button>
 </div>
 </header>
@@ -664,75 +664,111 @@
     });
   }
 
-  function startMrsDarcyPianoTheme() {
-    const N = {
-      D3: 146.83, G3: 196.00, A3: 220.00, B3: 246.94,
-      D4: 293.66, E4: 329.63, Fs4: 369.99, G4: 392.00, A4: 440.00, B4: 493.88,
-      Cs5: 554.37, D5: 587.33, E5: 659.25, Fs5: 739.99, A5: 880.00
-    };
+  /* 
+    TRILHA SONORA REAL: Orgulho & Preconceito (Dario Marianelli)
+    Playlist:
+    1. Dawn (Soundtrack - Pride and Prejudice)
+    2. Mrs. Darcy (Marianelli Mrs Darcy)
+    Inicia sempre por Dawn e transiciona automaticamente para Mrs. Darcy.
+  */
+  const playlist = [
+    { title: "Dawn", file: "audio/dawn.mp3" },
+    { title: "Mrs. Darcy", file: "audio/mrs_darcy.mp3" }
+  ];
+  let currentTrackIndex = 0;
+  const bgMusic = new Audio();
+  bgMusic.preload = "auto";
 
-    const score = [
-      { note: N.D3, time: 0, dur: 2.2, vol: 0.11 },
-      { note: N.A3, time: 180, dur: 1.8, vol: 0.08 },
-      { note: N.D4, time: 360, dur: 1.8, vol: 0.08 },
-      { note: N.Fs4, time: 540, dur: 2.0, vol: 0.09 },
-      { note: N.A4, time: 750, dur: 2.0, vol: 0.12 },
-      { note: N.Fs4, time: 1050, dur: 1.6, vol: 0.08 },
-      { note: N.E4, time: 1350, dur: 1.6, vol: 0.08 },
-      { note: N.B3, time: 1650, dur: 2.2, vol: 0.1 },
-      { note: N.D4, time: 1850, dur: 1.8, vol: 0.08 },
-      { note: N.Fs4, time: 2050, dur: 1.8, vol: 0.09 },
-      { note: N.B4, time: 2300, dur: 2.2, vol: 0.13 },
-      { note: N.Cs5, time: 2700, dur: 1.8, vol: 0.11 },
-      { note: N.D5, time: 3000, dur: 2.5, vol: 0.14 },
-      { note: N.G3, time: 3450, dur: 2.2, vol: 0.1 },
-      { note: N.D4, time: 3650, dur: 1.6, vol: 0.08 },
-      { note: N.G4, time: 3850, dur: 1.8, vol: 0.09 },
-      { note: N.B4, time: 4100, dur: 2.0, vol: 0.12 },
-      { note: N.A4, time: 4400, dur: 1.8, vol: 0.1 },
-      { note: N.Fs4, time: 4700, dur: 1.8, vol: 0.09 },
-      { note: N.A3, time: 5100, dur: 2.4, vol: 0.1 },
-      { note: N.Cs5, time: 5400, dur: 2.0, vol: 0.11 },
-      { note: N.D5, time: 5750, dur: 2.8, vol: 0.15 },
-      { note: N.A4, time: 6150, dur: 2.0, vol: 0.09 },
-      { note: N.Fs4, time: 6450, dur: 2.2, vol: 0.08 }
-    ];
+  function setTrack(index) {
+    currentTrackIndex = index % playlist.length;
+    const track = playlist[currentTrackIndex];
+    bgMusic.src = track.file;
+  }
 
-    const loopDuration = 7200;
+  // Ao finalizar uma faixa, avança automaticamente para a próxima (Dawn -> Mrs. Darcy -> Dawn...)
+  bgMusic.addEventListener('ended', () => {
+    setTrack(currentTrackIndex + 1);
+    playMusic();
+  });
 
-    function playScoreOnce() {
-      if (!isMusicPlaying) return;
-      score.forEach(item => {
-        setTimeout(() => {
-          if (isMusicPlaying) playPianoKey(item.note, item.dur, item.vol);
-        }, item.time);
+  function updateMusicUI(playing) {
+    const iconPlaying = document.getElementById('musicIconPlaying');
+    const iconMuted = document.getElementById('musicIconMuted');
+    const equalizer = document.getElementById('equalizerVisualizer');
+    const label = document.getElementById('musicBtnLabel');
+    const track = playlist[currentTrackIndex] || playlist[0];
+
+    if (playing) {
+      iconPlaying?.classList.remove('hidden');
+      iconMuted?.classList.add('hidden');
+      equalizer?.classList.remove('hidden');
+      equalizer?.classList.add('inline-flex');
+      if (label) label.innerText = `Tocando: ${track.title}`;
+    } else {
+      iconPlaying?.classList.add('hidden');
+      iconMuted?.classList.remove('hidden');
+      equalizer?.classList.add('hidden');
+      equalizer?.classList.remove('inline-flex');
+      if (label) label.innerText = `🎵 ${track.title} (Pausado)`;
+    }
+  }
+
+  function playMusic() {
+    if (!bgMusic.src || !bgMusic.src.includes(playlist[currentTrackIndex].file)) {
+      setTrack(currentTrackIndex);
+    }
+    const playPromise = bgMusic.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        isMusicPlaying = true;
+        updateMusicUI(true);
+      }).catch(err => {
+        console.info("Autoplay aguardando interação do usuário:", err.message);
+        isMusicPlaying = false;
+        updateMusicUI(false);
       });
     }
+  }
 
-    playScoreOnce();
-    pianoMelodyInterval = setInterval(playScoreOnce, loopDuration);
+  function pauseMusic() {
+    bgMusic.pause();
+    isMusicPlaying = false;
+    updateMusicUI(false);
   }
 
   function toggleAudio() {
     getAudioContext();
-
     if (isMusicPlaying) {
-      isMusicPlaying = false;
-      clearInterval(pianoMelodyInterval);
-      document.getElementById('musicIconPlaying').classList.add('hidden');
-      document.getElementById('musicIconMuted').classList.remove('hidden');
-      document.getElementById('equalizerVisualizer').classList.add('hidden');
-      document.getElementById('equalizerVisualizer').classList.remove('inline-flex');
-      document.getElementById('musicBtnLabel').innerText = "🎵 Mrs. Darcy (Piano Solo)";
+      pauseMusic();
     } else {
-      isMusicPlaying = true;
-      document.getElementById('musicIconPlaying').classList.remove('hidden');
-      document.getElementById('musicIconMuted').classList.add('hidden');
-      document.getElementById('equalizerVisualizer').classList.remove('hidden');
-      document.getElementById('equalizerVisualizer').classList.add('inline-flex');
-      document.getElementById('musicBtnLabel').innerText = "Tocando: Mrs. Darcy";
-      startMrsDarcyPianoTheme();
+      playMusic();
     }
+  }
+
+  // Prepara sempre começando pela primeira faixa: Dawn
+  setTrack(0);
+
+  // Gatilho para iniciar na primeira interação caso o autoplay seja bloqueado pelo navegador
+  function startAudioOnUserGesture() {
+    if (!isMusicPlaying) {
+      playMusic();
+    }
+    window.removeEventListener('click', startAudioOnUserGesture);
+    window.removeEventListener('touchstart', startAudioOnUserGesture);
+    window.removeEventListener('pointerdown', startAudioOnUserGesture);
+    window.removeEventListener('keydown', startAudioOnUserGesture);
+  }
+
+  window.addEventListener('click', startAudioOnUserGesture);
+  window.addEventListener('touchstart', startAudioOnUserGesture, { passive: true });
+  window.addEventListener('pointerdown', startAudioOnUserGesture);
+  window.addEventListener('keydown', startAudioOnUserGesture);
+
+  // Tenta carregar e tocar imediatamente
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => playMusic());
+  } else {
+    playMusic();
   }
 
   document.getElementById('musicToggleBtn').addEventListener('click', (e) => {
@@ -750,6 +786,9 @@
     isOpened = !isOpened;
 
     getAudioContext();
+    if (!isMusicPlaying) {
+      playMusic();
+    }
 
     if (isOpened) {
       isOpeningInProgress = true;
