@@ -378,21 +378,21 @@
 <div class="flex items-center gap-3">
 <button class="flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-amber-300/50 bg-[#17281D]/80 hover:bg-[#143529] text-amber-100 text-xs font-serif tracking-wider transition-all duration-300 backdrop-blur-md shadow-lg hover:border-amber-200 group" id="musicToggleBtn" title="Tocar / Pausar trilha sonora (Dawn & Mrs. Darcy)">
 <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400/20 text-amber-300 group-hover:scale-110 transition-transform">
-<svg class="w-3.5 h-3.5 fill-current text-amber-300 hidden" id="musicIconPlaying" viewBox="0 0 24 24">
+<svg class="w-3.5 h-3.5 fill-current text-amber-300" id="musicIconPlaying" viewBox="0 0 24 24">
 <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"></path>
 </svg>
-<svg class="w-3.5 h-3.5 fill-current text-amber-200" id="musicIconMuted" viewBox="0 0 24 24">
+<svg class="w-3.5 h-3.5 fill-current text-amber-200 hidden" id="musicIconMuted" viewBox="0 0 24 24">
 <path d="M4.27 3L3 4.27l9 9v.28c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4v-1.73l4 4V21h-2v-2.73l2-2V9.27l1.73 1.73 1.27-1.27L4.27 3zM12 7V3h6v4h-6z"></path>
 </svg>
 </span>
 <!-- Equalizador visual quando a música toca -->
-<span class="hidden items-center gap-0.5 h-3.5 px-0.5" id="equalizerVisualizer">
+<span class="inline-flex items-center gap-0.5 h-3.5 px-0.5" id="equalizerVisualizer">
 <span class="eq-bar"></span>
 <span class="eq-bar"></span>
 <span class="eq-bar"></span>
 <span class="eq-bar"></span>
 </span>
-<span class="font-serif tracking-wide text-amber-100 font-medium text-xs" id="musicBtnLabel">🎵 Dawn (Trilha Sonora)</span>
+<span class="font-serif tracking-wide text-amber-100 font-medium text-xs" id="musicBtnLabel">Tocando: Dawn</span>
 </button>
 </div>
 </header>
@@ -713,8 +713,10 @@
     { title: "Mrs. Darcy", file: "audio/mrs_darcy.mp3" }
   ];
   let currentTrackIndex = 0;
+  let userHasManuallyPaused = false;
   const bgMusic = new Audio();
   bgMusic.preload = "auto";
+  bgMusic.autoplay = true;
 
   function setTrack(index) {
     currentTrackIndex = index % playlist.length;
@@ -742,15 +744,24 @@
       equalizer?.classList.add('inline-flex');
       if (label) label.innerText = `Tocando: ${track.title}`;
     } else {
-      iconPlaying?.classList.add('hidden');
-      iconMuted?.classList.remove('hidden');
-      equalizer?.classList.add('hidden');
-      equalizer?.classList.remove('inline-flex');
-      if (label) label.innerText = `🎵 ${track.title} (Pausado)`;
+      if (!userHasManuallyPaused) {
+        iconPlaying?.classList.remove('hidden');
+        iconMuted?.classList.add('hidden');
+        equalizer?.classList.remove('hidden');
+        equalizer?.classList.add('inline-flex');
+        if (label) label.innerText = `Tocando: ${track.title}`;
+      } else {
+        iconPlaying?.classList.add('hidden');
+        iconMuted?.classList.remove('hidden');
+        equalizer?.classList.add('hidden');
+        equalizer?.classList.remove('inline-flex');
+        if (label) label.innerText = `🎵 ${track.title} (Pausado)`;
+      }
     }
   }
 
   function playMusic() {
+    userHasManuallyPaused = false;
     if (!bgMusic.src || !bgMusic.src.includes(playlist[currentTrackIndex].file)) {
       setTrack(currentTrackIndex);
     }
@@ -760,7 +771,7 @@
         isMusicPlaying = true;
         updateMusicUI(true);
       }).catch(err => {
-        console.info("Autoplay aguardando interação do usuário:", err.message);
+        console.info("Autoplay direto aguardando primeiro gesto do usuário:", err.message);
         isMusicPlaying = false;
         updateMusicUI(false);
       });
@@ -768,6 +779,7 @@
   }
 
   function pauseMusic() {
+    userHasManuallyPaused = true;
     bgMusic.pause();
     isMusicPlaying = false;
     updateMusicUI(false);
@@ -778,6 +790,7 @@
     if (isMusicPlaying) {
       pauseMusic();
     } else {
+      userHasManuallyPaused = false;
       playMusic();
     }
   }
@@ -785,28 +798,35 @@
   // Prepara sempre começando pela primeira faixa: Dawn
   setTrack(0);
 
-  // Gatilho para iniciar na primeira interação caso o autoplay seja bloqueado pelo navegador
+  // Gatilho imediato em QUALQUER primeira interação do usuário na página/tela
   function startAudioOnUserGesture() {
+    if (userHasManuallyPaused) return;
+    getAudioContext();
     if (!isMusicPlaying) {
       playMusic();
     }
-    window.removeEventListener('click', startAudioOnUserGesture);
-    window.removeEventListener('touchstart', startAudioOnUserGesture);
-    window.removeEventListener('pointerdown', startAudioOnUserGesture);
-    window.removeEventListener('keydown', startAudioOnUserGesture);
+    if (isMusicPlaying) {
+      window.removeEventListener('click', startAudioOnUserGesture, true);
+      window.removeEventListener('touchstart', startAudioOnUserGesture, true);
+      window.removeEventListener('pointerdown', startAudioOnUserGesture, true);
+      window.removeEventListener('scroll', startAudioOnUserGesture, true);
+      window.removeEventListener('keydown', startAudioOnUserGesture, true);
+    }
   }
 
-  window.addEventListener('click', startAudioOnUserGesture);
-  window.addEventListener('touchstart', startAudioOnUserGesture, { passive: true });
-  window.addEventListener('pointerdown', startAudioOnUserGesture);
-  window.addEventListener('keydown', startAudioOnUserGesture);
+  // Captura eventos em fase de captura (true) para resposta instantânea ao primeiro toque
+  window.addEventListener('click', startAudioOnUserGesture, true);
+  window.addEventListener('touchstart', startAudioOnUserGesture, { capture: true, passive: true });
+  window.addEventListener('pointerdown', startAudioOnUserGesture, true);
+  window.addEventListener('scroll', startAudioOnUserGesture, { capture: true, passive: true });
+  window.addEventListener('keydown', startAudioOnUserGesture, true);
 
-  // Tenta carregar e tocar imediatamente
+  // Tenta autoplay imediato em múltiplos estágios do carregamento
+  playMusic();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => playMusic());
-  } else {
-    playMusic();
   }
+  window.addEventListener('load', () => playMusic());
 
   document.getElementById('musicToggleBtn').addEventListener('click', (e) => {
     e.stopPropagation();
